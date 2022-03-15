@@ -1,10 +1,9 @@
-const express = require('express');
-const res = require('express/lib/response');
+const express = require("express");
+require('./services/passport');
+
 const app = express();
 
-app.get('/', (req, res) => {
-  res.send({ access_url_for_wisdom: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' });
-});
+require('./routes/authRoutes')(app);
 
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 5000;
 app.listen(PORT);
