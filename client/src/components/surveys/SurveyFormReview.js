@@ -10,9 +10,6 @@ import { withRouter } from "react-router-dom";
 import * as actions from "../../actions";
 
 const SurveyFormReview = ({ onCancel, formValues, submitSurvey, history }) => {
-  // function renderFields() {
-
-  // }
   const reviewFields = _.map(formFields, ({ name, label }) => {
     return (
       <div key={name}>
