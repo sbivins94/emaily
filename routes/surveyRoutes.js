@@ -10,6 +10,13 @@ const surveyTemplate = require("../services/emailTemplates/surveyTemplate");
 const Survey = mongoose.model("surveys");
 
 module.exports = (app) => {
+  app.get("/api/surveys", requireLogin, async (req, res) => {
+    const surveys = await Survey.find({ _user: req.user.id }).select({
+      recipients: false,
+    });
+    res.send(surveys);
+  });
+
   app.get("/api/surveys/:surveyId/:choice", (req, res) => {
     res.send("Thanks for voting!");
   });
@@ -18,30 +25,33 @@ module.exports = (app) => {
     const p = new Path("/api/surveys/:surveyId/:choice");
 
     _.chain(req.body)
-      .map(({ url, email }) => {   
-        console.log(`req.body = ${JSON.stringify(req.body)}`);  
+      .map(({ url, email }) => {
+        console.log(`req.body = ${JSON.stringify(req.body)}`);
         console.log(`url = ${url}`);
         const match = p.test(new URL(url).pathname); // cannot destructure match because if no match, it returns null
         if (match) {
-          return { email, ...match } // match will contain surveyId and choice if not null
+          return { email, ...match }; // match will contain surveyId and choice if not null
         }
       })
       .compact()
-      .uniqBy('email', 'surveyId')
+      .uniqBy("email", "surveyId")
       .each(({ surveyId, email, choice }) => {
-        Survey.updateOne({
-          _id: surveyId,
-          recipients: {
-            $elemMatch: { email: email, responded: false }
+        Survey.updateOne(
+          {
+            _id: surveyId,
+            recipients: {
+              $elemMatch: { email: email, responded: false },
+            },
+          },
+          {
+            $inc: { [choice]: 1 },
+            $set: { "recipients.$.responded": true },
+            lastResponded: new Date(),
           }
-        }, {
-          $inc: { [choice]: 1 },
-          $set: { 'recipients.$.responded': true },
-          lastResponded: new Date()
-        }).exec();
+        ).exec();
       })
       .value();
-    
+
     res.send({});
   });
 
